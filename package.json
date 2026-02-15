@@ -1,7 +1,7 @@
 {
   "name": "back-ehtp",
   "version": "1.0.0",
-  "description": "API REST backend - Azure Web App",
+  "description": "API REST matchs live et résultats du jour",
   "main": "server.js",
   "engines": {
     "node": ">=22.0.0"
