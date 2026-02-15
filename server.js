@@ -89,6 +89,56 @@ app.post('/api/matches', (req, res) => {
   });
 });
 
+/**
+ * PUT /api/matches/:id
+ * Modifier un match
+ */
+app.put('/api/matches/:id', (req, res) => {
+  const id = req.params.id;
+  const index = matchesOfDay.findIndex(m => m.id === id);
+  if (index === -1) {
+    return res.status(404).json({ success: false, error: 'Match non trouvé' });
+  }
+
+  const { home, away, homeScore, awayScore, status, minute, competition } = req.body || {};
+  const current = matchesOfDay[index];
+
+  const updated = {
+    id: current.id,
+    home: home != null ? String(home).trim() : current.home,
+    away: away != null ? String(away).trim() : current.away,
+    homeScore: homeScore != null ? Number(homeScore) : current.homeScore,
+    awayScore: awayScore != null ? Number(awayScore) : current.awayScore,
+    status: status === 'live' || status === 'finished' ? status : current.status,
+    minute: minute != null ? Number(minute) : current.minute,
+    competition: competition != null ? String(competition).trim() : current.competition,
+  };
+
+  if (!updated.home || !updated.away) {
+    return res.status(400).json({
+      success: false,
+      error: 'Les champs "home" et "away" sont obligatoires',
+    });
+  }
+
+  matchesOfDay[index] = updated;
+  res.json({ success: true, data: updated });
+});
+
+/**
+ * DELETE /api/matches/:id
+ * Supprimer un match
+ */
+app.delete('/api/matches/:id', (req, res) => {
+  const id = req.params.id;
+  const index = matchesOfDay.findIndex(m => m.id === id);
+  if (index === -1) {
+    return res.status(404).json({ success: false, error: 'Match non trouvé' });
+  }
+  matchesOfDay.splice(index, 1);
+  res.json({ success: true, deleted: id });
+});
+
 // Health check pour Azure
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'back-ehtp' });
