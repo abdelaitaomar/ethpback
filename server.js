@@ -15,6 +15,8 @@ const matchesOfDay = [
   { id: '4', home: 'Équipe G', away: 'Équipe H', homeScore: 1, awayScore: 1, status: 'finished', minute: 90, competition: 'Coupe' },
 ];
 
+let nextId = 5;
+
 /**
  * GET /api/matches/live
  * Liste des matchs du jour qui sont en direct
@@ -50,6 +52,40 @@ app.get('/api/matches', (req, res) => {
     success: true,
     count: matchesOfDay.length,
     data: matchesOfDay,
+  });
+});
+
+/**
+ * POST /api/matches
+ * Ajouter un match
+ * Body: { home, away, homeScore?, awayScore?, status?, minute?, competition? }
+ */
+app.post('/api/matches', (req, res) => {
+  const { home, away, homeScore, awayScore, status, minute, competition } = req.body || {};
+
+  if (!home || !away) {
+    return res.status(400).json({
+      success: false,
+      error: 'Les champs "home" et "away" sont obligatoires',
+    });
+  }
+
+  const match = {
+    id: String(nextId++),
+    home: String(home).trim(),
+    away: String(away).trim(),
+    homeScore: homeScore != null ? Number(homeScore) : 0,
+    awayScore: awayScore != null ? Number(awayScore) : 0,
+    status: status === 'live' || status === 'finished' ? status : 'live',
+    minute: minute != null ? Number(minute) : 0,
+    competition: competition != null ? String(competition).trim() : '',
+  };
+
+  matchesOfDay.push(match);
+
+  res.status(201).json({
+    success: true,
+    data: match,
   });
 });
 
