@@ -4,52 +4,60 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// CORS : autoriser le front (à adapter selon l’origine du front)
 app.use(cors());
 app.use(express.json());
 
-// --- Routes GET pour le front ---
+// Données de démo : matchs du jour (live + résultats)
+const matchesOfDay = [
+  { id: '1', home: 'Équipe A', away: 'Équipe B', homeScore: 2, awayScore: 1, status: 'live', minute: 67, competition: 'Ligue 1' },
+  { id: '2', home: 'Équipe C', away: 'Équipe D', homeScore: 0, awayScore: 0, status: 'live', minute: 23, competition: 'Ligue 1' },
+  { id: '3', home: 'Équipe E', away: 'Équipe F', homeScore: 3, awayScore: 2, status: 'finished', minute: 90, competition: 'Ligue 1' },
+  { id: '4', home: 'Équipe G', away: 'Équipe H', homeScore: 1, awayScore: 1, status: 'finished', minute: 90, competition: 'Coupe' },
+];
 
-// Santé (pour Azure et load balancers)
-app.get('/', (req, res) => {
+/**
+ * GET /api/matches/live
+ * Liste des matchs du jour qui sont en direct
+ */
+app.get('/api/matches/live', (req, res) => {
+  const live = matchesOfDay.filter(m => m.status === 'live');
   res.json({
-    message: 'API REST back-ehtp',
-    version: '1.0.0',
-    docs: 'GET /api/health, GET /api/items, GET /api/items/:id',
+    success: true,
+    count: live.length,
+    data: live,
   });
 });
 
-app.get('/api/health', (req, res) => {
+/**
+ * GET /api/matches/results
+ * Résultats des matchs du jour (terminés)
+ */
+app.get('/api/matches/results', (req, res) => {
+  const results = matchesOfDay.filter(m => m.status === 'finished');
   res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    node: process.version,
+    success: true,
+    count: results.length,
+    data: results,
   });
 });
 
-// Exemple : liste d’items (à remplacer par ta logique / BDD)
-app.get('/api/items', (req, res) => {
-  const items = [
-    { id: '1', label: 'Item 1', createdAt: '2025-01-01T00:00:00.000Z' },
-    { id: '2', label: 'Item 2', createdAt: '2025-01-02T00:00:00.000Z' },
-    { id: '3', label: 'Item 3', createdAt: '2025-01-03T00:00:00.000Z' },
-  ];
-  res.json(items);
+/**
+ * GET /api/matches
+ * Tous les matchs du jour (optionnel, pour le front)
+ */
+app.get('/api/matches', (req, res) => {
+  res.json({
+    success: true,
+    count: matchesOfDay.length,
+    data: matchesOfDay,
+  });
 });
 
-// Exemple : un item par id
-app.get('/api/items/:id', (req, res) => {
-  const id = req.params.id;
-  const item = { id, label: `Item ${id}`, createdAt: new Date().toISOString() };
-  res.json(item);
+// Health check pour Azure
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', service: 'back-ehtp' });
 });
 
-// 404
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found', path: req.path });
-});
-
-// Démarrage
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
